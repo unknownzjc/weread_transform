@@ -1,20 +1,30 @@
 <template>
     <div class="flex h-screen">
         <div class="flex-1 p-4 bg-white">
-            <NInput
+            <n-input
                 class="h-full"
                 v-model:value="rawText"
                 type="textarea"
                 placeholder=""
-            ></NInput>
+            ></n-input>
         </div>
         <div class="border-r border-gray-300 h-full"></div>
-        <div class="flex-1 p-4 bg-white">第二列内容</div>
+        <div class="relative flex-1 p-4 bg-white">
+            <n-input
+                class="h-full"
+                v-model:value="textCollation"
+                type="textarea"
+                placeholder=""
+            />
+            <div class="absolute -bottom-3 right-3">
+                <n-button>Copy</n-button>
+            </div>
+        </div>
     </div>
 
 </template>
 <script setup lang="ts">
-import { NInput } from 'naive-ui';
+import { NInput, NButton } from 'naive-ui';
 import { ref, watch } from 'vue';
 type HighlightWithThought = {
     date: string,
@@ -59,11 +69,34 @@ function extractChapters(notes: string): ChapterData[] {
 
     return chapters;
 }
+function dataToMarkDown(data: ChapterData[]) {
+    let markdown = '';
+
+    data.forEach(chapterData => {
+        // 添加标题作为折叠区块
+        markdown += `<details>\n<summary>${chapterData.title}</summary>\n\n`;
+
+        // 遍历 highlightsWithThoughts 并添加到 Markdown
+        chapterData.highlightsWithThoughts.forEach(item => {
+            if (item.thought) {
+                markdown += `- ${item.thought}\n`;
+                markdown += `  > ${item.highlight}\n\n`;
+            } else {
+                markdown += `- ${item.highlight}\n\n`;
+            }
+        });
+
+        markdown += `</details>\n\n`;
+    });
+
+    return markdown;
+}
 const rawText = ref('');
-const textCollation = ref<ChapterData[]>([]);
+const textCollation = ref<string>('');
 watch(rawText, raw => {
     if(raw) {
-        textCollation.value = extractChapters(raw);
+        const ec = extractChapters(raw)
+        textCollation.value = dataToMarkDown(ec);
         debugger
     }
 })
