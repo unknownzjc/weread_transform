@@ -10,14 +10,12 @@
         </div>
         <div class="border-r border-gray-300 h-full"></div>
         <div class="relative flex-1 p-4 bg-white">
-            <n-input
-                class="h-full"
-                v-model:value="textCollation"
-                type="textarea"
-                placeholder=""
+            <div
+                class="h-full overflow-scroll"
+                v-html="textCollation"
             />
-            <div class="absolute -bottom-3 right-3">
-                <n-button>Copy</n-button>
+            <div class="absolute bottom-6 right-6">
+                <n-button @click="copy(mdRaw)">Copy</n-button>
             </div>
         </div>
     </div>
@@ -26,6 +24,8 @@
 <script setup lang="ts">
 import { NInput, NButton } from 'naive-ui';
 import { ref, watch } from 'vue';
+import markdownit from 'markdown-it';
+import { useClipboard } from '@vueuse/core';
 type HighlightWithThought = {
     date: string,
     thought: string,
@@ -74,7 +74,7 @@ function dataToMarkDown(data: ChapterData[]) {
 
     data.forEach(chapterData => {
         // 添加标题作为折叠区块
-        markdown += `<details>\n<summary>${chapterData.title}</summary>\n\n`;
+        markdown += `## ${chapterData.title}\n\n`;
 
         // 遍历 highlightsWithThoughts 并添加到 Markdown
         chapterData.highlightsWithThoughts.forEach(item => {
@@ -86,18 +86,23 @@ function dataToMarkDown(data: ChapterData[]) {
             }
         });
 
-        markdown += `</details>\n\n`;
+        markdown += `\n\n`;
     });
 
     return markdown;
 }
+const md = new markdownit({
+    html: true
+});
+const { copy } = useClipboard();
 const rawText = ref('');
 const textCollation = ref<string>('');
+const mdRaw = ref('');
 watch(rawText, raw => {
     if(raw) {
-        const ec = extractChapters(raw)
-        textCollation.value = dataToMarkDown(ec);
-        debugger
+        const ec = extractChapters(raw);
+        mdRaw.value = dataToMarkDown(ec);
+        textCollation.value = md.render(mdRaw.value);
     }
 })
 </script>

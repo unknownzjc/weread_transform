@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vueuse/core": "^10.7.0",
+    "markdown-it": "^14.0.0",
     "vue": "^3.3.8"
   },
   "devDependencies": {
